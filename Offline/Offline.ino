@@ -16,9 +16,6 @@ const char* topic = "esp32/rssi";
 WiFiClientSecure wifiClient;
 PubSubClient mqttClient(wifiClient);
 
-// Variables for timing
-long previous_time = 0;
-
 // Wi-Fi credentials
 const char* ssid_1 = "AP_1";
 const char* password_1 = "12345678";
@@ -39,7 +36,6 @@ int avg_3 = 0;
 
 char count = 0;
 
-
 void setup()
 {
   Serial.begin(2000000);
@@ -50,7 +46,6 @@ void loop()
 {
   if(count == 20)
   {
-    //count = 0;
     for(char i=0 ; i<20 ; i++)
     {
       avg_1 += ap_1[i];
@@ -62,7 +57,7 @@ void loop()
     avg_3 /= 20;
 
     // Initialize secure WiFiClient
-    wifiClient.setInsecure(); // Use this only for testing, it allows connecting without a root certificate
+    wifiClient.setInsecure();
   
     setupMQTT();
 
@@ -76,10 +71,11 @@ void loop()
     // Convert the RSSI values to a string
     String payload = String(avg_1) + "," + String(avg_2) + "," + String(avg_3);
 
-    // Publish the sensor value to the MQTT topic
-    // Serial.print("RSSI Value: ");
-    // Serial.println(rssi_str);
+    // Publish the RSSI values to the MQTT topic
     mqttClient.publish(topic, payload.c_str());
+    Serial.println("First Point Done");
+    delay(2000);
+    count = 0;
   }
   else
   {

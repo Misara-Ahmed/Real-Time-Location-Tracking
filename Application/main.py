@@ -14,6 +14,7 @@ topic = "esp32/rssi"
 username = "Misara-Ahmed"
 password = "Miso-229"
 
+# Database details using MYSQL
 mydb = mysql.connector.connect(
   host="localhost",
   user="root",
@@ -21,7 +22,19 @@ mydb = mysql.connector.connect(
   database="location_tracking"
 )
 mycursor = mydb.cursor()
-# Retrieve data from the table
+
+#### Create a table in the database if not existed ####
+# mycursor.execute("""
+#     CREATE TABLE IF NOT EXISTS loc_map (
+#         id INT AUTO_INCREMENT PRIMARY KEY,
+#         location VARCHAR(50) NOT NULL,
+#         ap1_rssi INT NOT NULL,
+#         ap2_rssi INT NOT NULL,
+#         ap3_rssi INT NOT NULL
+#     )
+# """)
+
+# Retrieve data from the database
 mycursor.execute("SELECT * FROM loc_map")
 rows = mycursor.fetchall()  # Fetch all rows
 
@@ -37,14 +50,19 @@ ROOM_COORDINATES = {
 # Initialize the estimated location (default)
 estimated_location = "Room A"
 
+# Function to match the current location with the saved locations in the database
 def estimateLocation(rssi_1, rssi_2, rssi_3):
+    # Intialize variables
     min_distance = 10000000000000
     location = "Unkown"
+
     for row in rows:
+        # Calculating the nearest location to the current location using RSSI values
         distance = abs(rssi_1 - row[2]) + abs(rssi_2 - row[3]) + abs(rssi_3 - row[4])
         if distance < min_distance:
             min_distance = distance
             location = row[1]
+
     return location
 
 # Function to update the arrow position
@@ -71,13 +89,18 @@ def update_arrow():
 def on_connect(client, userdata, flags, rc, properties=None):
     print("CONNACK received with code %s." % rc)
 
-# Function to print the received message
+# Function to do certain action when receiving msg
 def on_message(client, userdata, msg):
     global estimated_location
     rssi_1, rssi_2 , rssi_3 = map(int, msg.payload.decode().split(','))
+
+    #### This part of code is used in online mode while estimating the current location ####
     estimated_location = estimateLocation(rssi_1, rssi_2, rssi_3)
     print(estimated_location)
     update_arrow()
+
+    #### This part of code is used in offline mode while building the map ####
+
     # Insert data into the table
     # sql = """
     #     INSERT INTO loc_map (location, ap1_rssi, ap2_rssi, ap3_rssi)
@@ -88,9 +111,10 @@ def on_message(client, userdata, msg):
     # mydb.commit()
     # print("Adding to database is done.")
 
-# Function to start the MQTT client
+# Function to start the MQTT client in another thread
 def start_mqtt_client():
     client = paho.Client(client_id="", userdata=None, protocol=paho.MQTTv5)
+
     # Enable TLS for secure connection
     client.tls_set(tls_version=mqtt.client.ssl.PROTOCOL_TLS)
 
@@ -106,13 +130,15 @@ def start_mqtt_client():
     # Setting callbacks
     client.on_message = on_message
     client.on_connect = on_connect
+
+    # Looping forever to maintain connection with the cloud
     client.loop_forever()
 
 # Create the main window
 root = tk.Tk()
 root.title("Real-Time Location Tracking")
 
-# Load the map image
+# Load the saved map image
 map_image = Image.open(MAP_IMAGE)
 map_photo = ImageTk.PhotoImage(map_image)
 
@@ -130,14 +156,13 @@ arrow_coords = [
     x - 10, y + 10,     # Bottom-left point
     x + 10, y + 10,     # Bottom-right point
 ]
-arrow = canvas.create_polygon(arrow_coords, fill="red")  # Initialize the arrow
+
+# Initialize the arrow
+arrow = canvas.create_polygon(arrow_coords, fill="red")  
 
 # Add a label to display the estimated location
 location_label = tk.Label(root, text=f"Estimated Location: {estimated_location}", font=("Arial", 14))
 location_label.pack(pady=10)
-
-# Looping forever to maintain connection with the cloud
-# client.loop_forever()
 
 # Start the MQTT client in a separate thread
 mqtt_thread = threading.Thread(target=start_mqtt_client, daemon=True)
@@ -145,18 +170,6 @@ mqtt_thread.start()
 
 # Run the Tkinter main loop
 root.mainloop()
-
-# # Create a table
-# mycursor.execute("""
-#     CREATE TABLE IF NOT EXISTS loc_map (
-#         id INT AUTO_INCREMENT PRIMARY KEY,
-#         location VARCHAR(50) NOT NULL,
-#         ap1_rssi INT NOT NULL,
-#         ap2_rssi INT NOT NULL,
-#         ap3_rssi INT NOT NULL
-#     )
-# """)
-
 
 ######################################  Responsive window and point  ###################################################
 # import tkinter as tk
@@ -172,7 +185,7 @@ root.mainloop()
 # root.geometry("400x300")
 # root.minsize(width, height)  # Set a minimum window size
 # def update_dot():
-#     width = root.winfo_width()  # Get current window width
+#     width = root.winfo_width()    # Get current window width
 #     height = root.winfo_height()  # Get current window height
 #     canvas.coords(dot, (width/2), (width/2) , (height/2) + 10, (height/2) + 10)  # Dot size: 10x10 pixels
 #     # if (curr_height != height) | (curr_width != width):

@@ -16,7 +16,7 @@ A real-time location tracking system using **Wi-Fi** Technology used for trackin
 
 ## Map
 ![Map Screenshot](https://github.com/Misara-Ahmed/Real-Time-Location-Tracking/blob/main/Application/map.png)
-
 <hr>
+
 ## Demo
-[Watch the Demo Video](https://github.com/Misara-Ahmed/Real-Time-Location-Tracking/blob/main/Demo.gif)
+![Demo Video](https://github.com/Misara-Ahmed/Real-Time-Location-Tracking/blob/main/Demo.gif)

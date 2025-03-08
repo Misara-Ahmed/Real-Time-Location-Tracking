@@ -1,6 +1,8 @@
+// Important includes
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 #include <PubSubClient.h>
+#define NUM_READINGS                      20
 
 // MQTT broker settings
 const char* mqtt_server = "6b156a30cf464e68842b90357f944402.s1.eu.hivemq.cloud";
@@ -26,46 +28,57 @@ const char* password_2 = "12345678";
 const char* ssid_3 = "Ahmed Said";
 const char* password_3 = "missarahmed@246";
 
-int ap_1[20];
-int ap_2[20];
-int ap_3[20];
+// An array for each access point to store the rssi values used at each point.
+int ap_1[NUM_READINGS];
+int ap_2[NUM_READINGS];
+int ap_3[NUM_READINGS];
 
+// Average for the stored values for each access point
 int avg_1 = 0;
 int avg_2 = 0;
 int avg_3 = 0;
 
+// a counter
 char count = 0;
 
 void setup()
 {
+  // Begin serial connection
   Serial.begin(2000000);
+
+  // Setup wifi mode as station
   WiFi.mode(WIFI_STA);
 }
 
 void loop()
 {
-  if(count == 20)
+  // Handling values after being stored
+  if(count == NUM_READINGS)
   {
-    for(char i=0 ; i<20 ; i++)
+    // Calculating average of values after being stored 
+    for(char i=0 ; i<NUM_READINGS ; i++)
     {
       avg_1 += ap_1[i];
       avg_2 += ap_2[i];
       avg_3 += ap_3[i];
     }
-    avg_1 /= 20;
-    avg_2 /= 20;
-    avg_3 /= 20;
+    avg_1 /= NUM_READINGS;
+    avg_2 /= NUM_READINGS;
+    avg_3 /= NUM_READINGS;
 
     // Initialize secure WiFiClient
     wifiClient.setInsecure();
-  
+
+    // Setup MQTT connection
     setupMQTT();
 
+    // Check if connected to the MQTT broker
     if (!mqttClient.connected())
     {
       reconnect();
     }
 
+    // Maintain connection with MQTT broker
     mqttClient.loop();
 
     // Convert the RSSI values to a string
@@ -79,6 +92,7 @@ void loop()
   }
   else
   {
+    // Connecting to each AP and storing the RSSI value in the array
     connect(ssid_1,password_1);
     ap_1[count] = WiFi.RSSI();
     Serial.print("AP1: ");
@@ -99,11 +113,13 @@ void loop()
   }
 }
 
+// Function to setup the connection to the MQTT broker
 void setupMQTT()
 {
   mqttClient.setServer(mqtt_server, mqtt_port);
 }
 
+// Function to make sure of the connection to the MQTT broker
 void reconnect()
 {
   Serial.println("Connecting to MQTT Broker...");
@@ -125,8 +141,11 @@ void reconnect()
   }
 }
 
+// Function to connect to a specific network (AP)
 void connect(const char* ssid, const char* password)
 {
   WiFi.begin(ssid, password);
+
+  // Bloking till connecting to the network
   while (WiFi.status() != WL_CONNECTED);
 }

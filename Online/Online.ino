@@ -1,3 +1,4 @@
+// Important includes
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 #include <PubSubClient.h>
@@ -26,38 +27,50 @@ const char* password_2 = "12345678";
 const char* ssid_3 = "Ahmed Said";
 const char* password_3 = "missarahmed@246";
 
+// RSSI values for each access point
 int rssi_1 = 0;
 int rssi_2 = 0;
 int rssi_3 = 0;
 
+// Counter for the access points
 char ap = 0;
 
+// Var to hold the number of found  networks
 int num_networks = 0;
 
 void setup()
 {
+  // Begin serial connection
   Serial.begin(2000000);
+
+  // Setup wifi mode as station
   WiFi.mode(WIFI_STA);
 
   // Initialize secure WiFiClient
   wifiClient.setInsecure();
 
+  // Setup MQTT connection
   setupMQTT();
 
+  // Connect to the AP
   connect(ssid_3,password_3);
 }
 
 void loop()
 {
+  // Check if connected to the MQTT broker
   if (!mqttClient.connected())
   {
     reconnect();
   }
+
+  // Maintain connection with MQTT broker
   mqttClient.loop();
 
   // Scan for nearby networks
   num_networks = WiFi.scanNetworks();
 
+  // Looping till finding the required APs
   for (int i=0 ; i<num_networks ; i++)
   {
     if(ap == 3)
@@ -97,11 +110,13 @@ void loop()
   mqttClient.publish(topic, payload.c_str());
 }
 
+// Function to setup the connection to the MQTT broker
 void setupMQTT()
 {
   mqttClient.setServer(mqtt_server, mqtt_port);
 }
 
+// Function to make sure of the connection to the MQTT broker
 void reconnect()
 {
   Serial.println("Connecting to MQTT Broker...");
@@ -123,6 +138,7 @@ void reconnect()
   }
 }
 
+// Function to connect to a specific network (AP)
 void connect(const char* ssid, const char* password)
 {
   WiFi.begin(ssid, password);

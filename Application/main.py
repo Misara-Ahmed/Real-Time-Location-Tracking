@@ -1,3 +1,4 @@
+# Importing used libraries
 import tkinter as tk
 import threading
 from PIL import Image, ImageTk
@@ -23,7 +24,7 @@ mydb = mysql.connector.connect(
 )
 mycursor = mydb.cursor()
 
-#### Create a table in the database if not existed ####
+################ Create a table in the database if not existed ###################
 # mycursor.execute("""
 #     CREATE TABLE IF NOT EXISTS loc_map (
 #         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -57,7 +58,7 @@ def estimateLocation(rssi_1, rssi_2, rssi_3):
     location = "Unkown"
 
     for row in rows:
-        # Calculating the nearest location to the current location using RSSI values
+        # Calculating the nearest matching location to the current location using RSSI values
         distance = abs(rssi_1 - row[2]) + abs(rssi_2 - row[3]) + abs(rssi_3 - row[4])
         if distance < min_distance:
             min_distance = distance
@@ -100,7 +101,6 @@ def on_message(client, userdata, msg):
     update_arrow()
 
     #### This part of code is used in offline mode while building the map ####
-
     # Insert data into the table
     # sql = """
     #     INSERT INTO loc_map (location, ap1_rssi, ap2_rssi, ap3_rssi)
@@ -170,38 +170,3 @@ mqtt_thread.start()
 
 # Run the Tkinter main loop
 root.mainloop()
-
-######################################  Responsive window and point  ###################################################
-# import tkinter as tk
-#
-# # Create the main window
-# root = tk.Tk()
-# root.title("Responsive Window")
-#
-# width = 200
-# height = 150
-#
-# # Make the window resizable
-# root.geometry("400x300")
-# root.minsize(width, height)  # Set a minimum window size
-# def update_dot():
-#     width = root.winfo_width()    # Get current window width
-#     height = root.winfo_height()  # Get current window height
-#     canvas.coords(dot, (width/2), (width/2) , (height/2) + 10, (height/2) + 10)  # Dot size: 10x10 pixels
-#     # if (curr_height != height) | (curr_width != width):
-#     #     canvas.create_oval(100 * width / 2, 100 * width / 2, 150 * height / 2, 150 * height / 2, fill="red")
-#     root.after(100, update_dot)  # Update every 100ms
-#
-# # Create a canvas that fills the window
-# canvas = tk.Canvas(root, bg="white")
-# canvas.pack(fill=tk.BOTH, expand=True)  # Fill and expand with window
-#
-# # Add a dot to the canvas
-# dot = canvas.create_oval(100*width/2 , 100*width/2, 150*height/2, 150*height/2, fill="red")
-#
-#
-# update_dot()
-#
-# # Run the Tkinter main loop
-# root.mainloop()
-########################################################################################################################

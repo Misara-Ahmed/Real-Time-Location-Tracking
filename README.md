@@ -2,6 +2,7 @@
 A real-time location tracking system using **Wi-Fi** Technology used for tracking moving objects on a live map with precision. 🎯
 
 <hr>
+
 > **Hardware Used**
 - **2 ESP32** used as access points.
 - **ESP32S3** used as a moving object.
